@@ -1,0 +1,55 @@
+name: CI/CD - Automated Testing
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure Spanish locale
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y locales
+          sudo locale-gen es_ES.UTF-8
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.17.1'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Cucumber tests and Generate Serenity BDD report
+        run: |
+          export LANG=es_ES.UTF-8
+          export LANGUAGE=es_ES.UTF-8
+          export LC_ALL=es_ES.UTF-8
+          npm run test
+        continue-on-error: true
+
+      - name: Generate Serenity BDD report
+        run: npm run serenity:report
+
+      - name: Deploy report to GitHub Pages
+        if: always()
+        uses: JamesIves/github-pages-deploy-action@v4.6.8
+        with:
+          branch: gh-pages
+          folder: target/site/serenity
+          clean: true
