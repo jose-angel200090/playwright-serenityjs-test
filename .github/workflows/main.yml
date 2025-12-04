@@ -43,9 +43,6 @@ jobs:
           npm run test
         continue-on-error: true
 
-      - name: Generate Serenity BDD report
-        run: npm run serenity:report
-
       - name: Deploy report to GitHub Pages
         if: always()
         uses: JamesIves/github-pages-deploy-action@v4.6.8
